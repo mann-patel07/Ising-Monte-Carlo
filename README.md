@@ -134,6 +134,8 @@ jupyter nbconvert --to notebook --execute --inplace 1_Ising_Analysis.ipynb
 python check_consistency.py
 ```
 
+Tested with Python 3.12.5 on macOS.
+
 On my laptop with 4 worker processes the Metropolis runs took about half an hour, the Wolff runs under two minutes and the analysis about a minute and a quarter.
 
 ## References
