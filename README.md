@@ -42,7 +42,7 @@ Least-squares fits of the logarithm of the observable against the logarithm of L
 
 The commonly quoted Metropolis value is about 2.17, and four small lattices give only a rough estimate. The error is the least-squares standard error of a four-point line. For Wolff the time is converted to sweep equivalents by multiplying with the mean cluster size over N. At L = 64 the Metropolis autocorrelation time is 184.4 sweeps and the Wolff time is 1.51 sweep equivalents, a ratio of 121.9. This compares decorrelation per sweep equivalent, not computing time.
 
-Runs flagged blocks_short: 0. Metropolis runs in total: 104. A flagged run would have block length below 10 autocorrelation times, and its error bars would probably be too small.
+Runs flagged blocks_short: 0. Metropolis runs in total: 104. A flagged run would have block length below 10 autocorrelation times, and its error bars would probably be too small. The flag uses the autocorrelation time of |m| and not the one of the energy. For the energy, the lowest block length over autocorrelation time is 152.5 (L = 64, T = 2.29) against the limit of 10, all 104 energy autocorrelation times converged, and the energy time is shorter than the |m| time in every run.
 
 ## Method in short
 
