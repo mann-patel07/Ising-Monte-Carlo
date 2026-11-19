@@ -58,7 +58,7 @@ Runs flagged blocks_short: 0. Metropolis runs in total: 104. A flagged run would
 
 ## Pre-registration
 
-`PREREGISTRATION.md` was written before any simulation was run. It fixes the model, algorithms, constants, estimators and the primary result. These choices were fixed before any simulation was run and were not changed afterward.
+`PREREGISTRATION.md` was written before any simulation was run. It fixes the model, algorithms, constants, estimators and the primary result. The commit history here does not show this order, because I uploaded the finished project in a few commits.
 
 ## Tests
 
