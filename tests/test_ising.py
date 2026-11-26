@@ -49,7 +49,7 @@ def test_metropolis_vs_exact_enumeration_4x4(T):
     est, err = ising.estimators_with_errors(blocks, N, T)
     for k in ["e_mean", "absm_mean", "C", "chi_c", "U"]:
         pull = (est[k] - exact[k]) / err[k]
-        assert abs(pull) < 5, (T, k, est[k], exact[k], err[k])
+        assert abs(pull) < 4, (T, k, est[k], exact[k], err[k])
 
 
 @pytest.mark.parametrize("T", [2.0, TC, 3.0])
@@ -61,7 +61,7 @@ def test_wolff_vs_exact_enumeration_4x4(T):
     est, err = ising.estimators_with_errors(blocks, 16, T)
     for k in ["e_mean", "absm_mean"]:
         pull = (est[k] - exact[k]) / err[k]
-        assert abs(pull) < 5, (T, k, est[k], exact[k], err[k])
+        assert abs(pull) < 4, (T, k, est[k], exact[k], err[k])
 
 
 def test_wolff_energy_bookkeeping_matches_direct_energy():

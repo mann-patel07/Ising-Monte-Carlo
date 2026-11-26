@@ -70,7 +70,7 @@ pytest
 
 ## Limitations
 
-- The lattices are small (8 to 64), so corrections to scaling are present. The L = 8 data shows them, for example in the (8, 16) crossing.
+- The lattices are small (8 to 64), so corrections to scaling are expected. The (8, 16) crossing misses the exact Tc by 2.94 standard errors. Corrections to scaling at L = 8 are a likely reason, not a proven one, because the three crossings do not move steadily toward Tc and each run uses one seed.
 - Single-spin Metropolis is slow near Tc. Runs flagged blocks_short have error bars that are probably too small. None was flagged here, but the flag does not guarantee exact errors.
 - Temperatures are a fixed grid with no histogram reweighting, so the crossing is a linear interpolation.
 - There is one seed per run.
