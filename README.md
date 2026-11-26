@@ -22,6 +22,22 @@ All three pairs of sizes:
 | 16 and 32 | 2.2705 | 0.0024 | 2.2651 | 2.2739 |
 | 32 and 64 | 2.2666 | 0.0035 | 2.2594 | 2.2729 |
 
+## Repeat runs with new seeds (added after the first version)
+
+The main runs use one seed per point. After the first version I reran the fine temperature grid (T = 2.20 to 2.34, 15 temperatures) for L = 8, 16, 32 and 64 with 3 new independent seeds, with the same sweeps, thermalization and blocks (plan in `UPGRADE_PLAN.md`). Replicate 0 is the first version's run, so each pair has 4 crossings. The table gives, for each pair, the mean of the 4 crossings, their sample standard deviation, the standard error of the mean (the standard deviation divided by 2), the difference of the mean from the exact Tc in standard errors of the mean, whether all 4 are on the same side of the exact Tc, and the verdict by the rule in the plan. The numbers are in `results/crossing_replicates_summary.csv`. The headline result above is unchanged.
+
+| Pair of sizes | Mean crossing | SD over 4 runs | Standard error of the mean | Difference from exact (standard errors) | All on the same side | Verdict |
+|---|---|---|---|---|---|---|
+| 8,16 | 2.2633 | 0.0010 | 0.0005 | -11.86 | yes | finite-size effect |
+| 16,32 | 2.2691 | 0.0017 | 0.0008 | -0.13 | no | consistent with noise |
+| 32,64 | 2.2671 | 0.0014 | 0.0007 | -2.91 | no | consistent with noise |
+
+The (8, 16) crossing is below the exact Tc in all 4 runs and the pooled crossing is more than 3 standard errors away, so by the rule in the plan I call it a finite-size effect. I have not checked which correction to scaling causes it. The other two pairs are consistent with noise. For the bootstrap check, the first version's bootstrap standard error divided by the standard deviation over the 4 runs is 2.0 for (8, 16), 1.4 for (16, 32) and 2.5 for (32, 64). With 4 runs this ratio is itself uncertain by roughly a factor of 1.5, so it is a rough check only. In all three pairs the bootstrap error is larger than the spread of the runs.
+
+![Crossings of the four runs](Images/crossing_replicates.png)
+
+The figure shows the 4 crossings of each pair as grey points, their mean with the standard error of the mean as a blue square, and the exact Tc as a dashed line.
+
 ## Critical exponent ratios
 
 Least-squares fits of the logarithm of the observable against the logarithm of L, with bootstrap errors. The primary fit uses sizes 16, 32, 64.
@@ -40,7 +56,7 @@ Least-squares fits of the logarithm of the observable against the logarithm of L
 - Metropolis z = 1.96 +/- 0.07
 - Wolff z = 0.20 +/- 0.02
 
-The commonly quoted Metropolis value is about 2.17, and four small lattices give only a rough estimate. The error is the least-squares standard error of a four-point line. For Wolff the time is converted to sweep equivalents by multiplying with the mean cluster size over N. At L = 64 the Metropolis autocorrelation time is 184.4 sweeps and the Wolff time is 1.51 sweep equivalents, a ratio of 121.9. This compares decorrelation per sweep equivalent, not computing time.
+The commonly quoted Metropolis value is about 2.17, for example z = 2.1665 ± 0.0012 from Nightingale and Blöte (1996), which is for the slowest relaxation mode rather than the integrated time of |m| measured here. Four small lattices give only a rough estimate. The error is the least-squares standard error of a four-point line. For Wolff the time is converted to sweep equivalents by multiplying with the mean cluster size over N. At L = 64 the Metropolis autocorrelation time is 184.4 sweeps and the Wolff time is 1.51 sweep equivalents, a ratio of 121.9. This compares decorrelation per sweep equivalent, not computing time.
 
 Runs flagged blocks_short: 0. Metropolis runs in total: 104. A flagged run would have block length below 10 autocorrelation times, and its error bars would probably be too small. The flag uses the autocorrelation time of |m| and not the one of the energy. For the energy, the lowest block length over autocorrelation time is 152.5 (L = 64, T = 2.29) against the limit of 10, all 104 energy autocorrelation times converged, and the energy time is shorter than the |m| time in every run.
 
@@ -62,7 +78,7 @@ Runs flagged blocks_short: 0. Metropolis runs in total: 104. A flagged run would
 
 ## Tests
 
-`tests/test_ising.py` uses fixed seeds. It checks the energy against a brute-force loop, the checkerboard update, an exact enumeration of all 65536 states of the 4 x 4 lattice against Metropolis (three temperatures) and Wolff, detailed-balance limits, reproducibility, the autocorrelation estimator on an AR(1) series, the jackknife, the exact formulas, the Binder limits, the crossing rule and the scaling fit. The full test run takes about two minutes.
+`tests/test_ising.py` has 22 tests and uses fixed seeds. Four of them were added after the first version: the replicate run indices never collide with the first version's, the replicate random streams are reproducible and differ between replicates, identical replicates give a zero spread without dividing by zero, and the verdict rule on two worked examples. It checks the energy against a brute-force loop, the checkerboard update, an exact enumeration of all 65536 states of the 4 x 4 lattice against Metropolis (three temperatures) and Wolff, detailed-balance limits, reproducibility, the autocorrelation estimator on an AR(1) series, the jackknife, the exact formulas, the Binder limits, the crossing rule and the scaling fit. The full test run takes about two minutes.
 
 ```bash
 pytest
@@ -70,7 +86,7 @@ pytest
 
 ## Limitations
 
-- The lattices are small (8 to 64), so corrections to scaling are expected. The (8, 16) crossing misses the exact Tc by 2.94 standard errors. Corrections to scaling at L = 8 are a likely reason, not a proven one, because the three crossings do not move steadily toward Tc and each run uses one seed.
+- The lattices are small (8 to 64), so corrections to scaling are expected. The (8, 16) crossing misses the exact Tc by 2.94 standard errors in the main run. In 4 independent runs it is below the exact Tc every time (mean 2.2633), so I call it a finite-size effect (see "Repeat runs with new seeds"). I have not checked which correction to scaling causes it.
 - Single-spin Metropolis is slow near Tc. Runs flagged blocks_short have error bars that are probably too small. None was flagged here, but the flag does not guarantee exact errors.
 - Temperatures are a fixed grid with no histogram reweighting, so the crossing is a linear interpolation.
 - There is one seed per run.
@@ -87,11 +103,16 @@ pytest
 - `run_metropolis.py`: all Metropolis runs, restartable.
 - `run_wolff.py`: Wolff runs at Tc.
 - `analyze.py`: writes the CSV files in `results/`.
+- `run_replicates.py`: the Metropolis fine grid with 3 new seeds (added after the first version).
+- `analyze_replicates.py`: the crossings of the 4 runs and the verdict (added after the first version).
+- `UPGRADE_PLAN.md`: the plan for the seed replicates, written before their results.
 - `check_consistency.py`: checks that README numbers match `results/`.
 - `1_Ising_Analysis.ipynb`: executed analysis notebook.
 - `requirements.txt`: pinned package versions.
 - `tests/test_ising.py`: unit tests.
 - `results/runs/`: one JSON file per run (estimators, errors, block means, autocorrelation times).
+- `results/replicates/`: 180 JSON files, one per replicate run of the fine grid.
+- `results/crossing_replicates.csv`, `results/crossing_replicates_summary.csv`: the crossing of every run, and the summary per pair.
 - `results/observables.csv`: every estimator with its error for every run.
 - `results/crossings.csv`: Binder crossings with bootstrap errors.
 - `results/exponents.csv`: exponent ratios.
@@ -100,43 +121,24 @@ pytest
 - `results/exact_check_4x4.csv`: pulls from the 4 x 4 exact enumeration.
 - `results/summary.csv`: headline numbers.
 - `data/`: raw E and M series at Tc (compressed npz files).
-- `Images/`: figures written by the notebook.
+- `Images/`: figures written by the notebook, and `Images/crossing_replicates.png` from `analyze_replicates.py`.
 
 ## How to run from a fresh clone
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+Python 3.12.5 on macOS. Run each command from the project folder with the environment active (`source .venv/bin/activate`). The times were measured on my laptop with another job running, except the first Metropolis run, whose time comes from the wall times saved in `results/runs/` (4 worker processes). Nothing is downloaded.
 
-```bash
-pytest
-```
-
-```bash
-python run_metropolis.py
-```
-
-```bash
-python run_wolff.py
-```
-
-```bash
-python analyze.py
-```
-
-```bash
-jupyter nbconvert --to notebook --execute --inplace 1_Ising_Analysis.ipynb
-```
-
-```bash
-python check_consistency.py
-```
-
-Tested with Python 3.12.5 on macOS.
-
-On my laptop with 4 worker processes the Metropolis runs took about half an hour, the Wolff runs under two minutes and the analysis about a minute and a quarter.
+| Command | What it does | Time |
+|---|---|---|
+| `python3 -m venv .venv` | makes the environment | 1.4 s |
+| `pip install -r requirements.txt` | installs the pinned packages | 20 s |
+| `pytest` | runs the 22 tests | 1 min 15 s |
+| `python run_metropolis.py` | all 104 Metropolis runs (not rerun for this table) | about 29 min |
+| `python run_wolff.py` | the 4 Wolff runs | 73 s |
+| `python run_replicates.py` | the 180 replicate runs (added after the first version) | 39.9 min |
+| `python analyze.py` | writes the CSV files in `results/` | 76 s |
+| `python analyze_replicates.py` | the crossings of the 4 runs (added after the first version) | 0.4 s |
+| `jupyter nbconvert --to notebook --execute --inplace 1_Ising_Analysis.ipynb` | re-executes the analysis notebook | 4.7 s |
+| `python check_consistency.py` | checks the numbers in this README | 0.3 s |
 
 ## References
 
@@ -145,6 +147,7 @@ On my laptop with 4 worker processes the Metropolis runs took about half an hour
 - Metropolis, Rosenbluth, Rosenbluth, Teller and Teller (1953), "Equation of State Calculations by Fast Computing Machines".
 - Binder (1981), "Finite Size Scaling Analysis of Ising Model Block Distribution Functions".
 - Wolff (1989), "Collective Monte Carlo Updating for Spin Systems".
+- Nightingale and Blöte (1996), "The Dynamic Exponent of the Two-Dimensional Ising Model and Monte Carlo Computation of the Sub-Dominant Eigenvalue of the Stochastic Matrix", Physical Review Letters 76, 4548.
 
 ## What's next
 
@@ -152,4 +155,4 @@ Histogram reweighting, larger lattices with a compiled sampler, and the 3D model
 
 ## Data source
 
-All data in this repository is generated by the simulation code in this repository. Nothing is downloaded.
+All data in this repository is produced by the simulation code in this repository. Nothing is downloaded.

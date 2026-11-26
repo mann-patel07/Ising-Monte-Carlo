@@ -168,3 +168,54 @@ def test_bootstrap_reproducible_and_runs():
     b = ising.bootstrap([blocks], f, n_boot=100)
     assert a == b
     assert a["n_nan"] == 0 and a["se"] > 0
+
+
+# ---- seed replicates (added after the first version, see UPGRADE_PLAN.md) ----
+
+def test_replicate_run_indices_never_collide_with_the_first_version():
+    import run_replicates as rr
+    first_version = set(range(25)) | {999}
+    seen = set()
+    for rep in rr.REPLICATES:
+        for T in config.T_FINE:
+            idx = rr.run_index_for(rep, T)
+            assert idx not in first_version
+            assert idx not in seen
+            seen.add(idx)
+
+
+def test_replicate_streams_are_reproducible_and_differ_between_replicates():
+    import run_replicates as rr
+    T = config.T_FINE[3]
+    a = ising.make_rng(config.ALGO_METROPOLIS, 16, rr.run_index_for(1, T)).random(5)
+    b = ising.make_rng(config.ALGO_METROPOLIS, 16, rr.run_index_for(1, T)).random(5)
+    c = ising.make_rng(config.ALGO_METROPOLIS, 16, rr.run_index_for(2, T)).random(5)
+    assert np.array_equal(a, b)
+    assert a[0] != c[0]
+
+
+def test_identical_replicates_give_zero_spread_and_no_division_by_zero():
+    import analyze_replicates as ar
+    sem, dsem, same, verdict = ar.verdict([2.26, 2.26, 2.26, 2.26], 2.26)
+    assert sem == 0.0
+    assert np.isnan(dsem)
+    assert verdict == "consistent with noise"
+
+
+def test_verdict_rule_on_two_hand_worked_examples():
+    import analyze_replicates as ar
+    tc = config.TC_EXACT  # 2.26919
+    # Case 1: crossings 2.260, 2.261, 2.262, 2.263 (mean 2.2615).
+    #   deviations from the mean: -1.5e-3, -0.5e-3, +0.5e-3, +1.5e-3, so the sum of squares is 5.0e-6,
+    #   the sample variance is 5.0e-6 / 3 = 1.667e-6 and the SD is 1.291e-3.
+    #   sem = SD / sqrt(4) = 6.45e-4, and 3 sem = 1.94e-3.
+    #   The pooled crossing 2.2615 is 7.69e-3 below Tc, which is more than 1.94e-3.
+    #   All four crossings are below Tc (2.26919). So the verdict is a finite-size effect.
+    sem, dsem, same, verdict = ar.verdict([2.260, 2.261, 2.262, 2.263], 2.2615, tc)
+    assert same and abs(sem - 6.455e-4) < 1e-6 and verdict == "finite-size effect"
+    # Case 2: crossings 2.265, 2.272, 2.268, 2.271 (mean 2.269).
+    #   2.265 is below Tc and 2.272 is above Tc, so they are not all on the same side.
+    #   The pooled crossing 2.269 is 1.9e-4 from Tc, far less than 3 sem (3 x 1.65e-3 = 4.9e-3).
+    #   So the verdict is consistent with noise on both rules.
+    sem, dsem, same, verdict = ar.verdict([2.265, 2.272, 2.268, 2.271], 2.269, tc)
+    assert not same and verdict == "consistent with noise"

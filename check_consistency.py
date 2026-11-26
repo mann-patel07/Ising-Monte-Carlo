@@ -93,6 +93,38 @@ check("speedup ratio", "a ratio of", s("speedup_L64"), 1)
 check("blocks_short count", "Runs flagged blocks_short:", s("n_blocks_short_runs"), 0)
 check("metropolis run count", "Metropolis runs in total:", s("n_metropolis_runs"), 0)
 
+# seed replicates (added after the first version)
+rep = pd.read_csv(RES / "crossing_replicates_summary.csv")
+for _, r in rep.iterrows():
+    row = (f"| {r['pair']} | {r['mean']:.4f} | {r['sd']:.4f} | {r['sem']:.4f} | {r['diff_in_sem']:.2f} | "
+           f"{'yes' if r['same_side'] else 'no'} | {r['verdict']} |")
+    checked += 1
+    if row not in README:
+        failures.append(f"replicate table row differs: {row}")
+ratios = [f"{x:.1f}" for x in rep["ratio"]]
+phrase = (f"is {ratios[0]} for (8, 16), {ratios[1]} for (16, 32) and {ratios[2]} for (32, 64)")
+checked += 1
+if phrase not in README:
+    failures.append(f"README bootstrap ratios differ: {phrase}")
+checked += 1
+if f"(mean {rep.iloc[0]['mean']:.4f})" not in README:
+    failures.append("README mean of the (8, 16) crossings differs")
+for p_ in ("results/replicates", "results/crossing_replicates.csv", "results/crossing_replicates_summary.csv", "UPGRADE_PLAN.md"):
+    checked += 1
+    if not (ROOT / p_).exists():
+        failures.append(f"missing {p_}")
+checked += 1
+if len(list((RES / "replicates").glob("*.json"))) != 180:
+    failures.append("results/replicates should hold 180 JSON files")
+checked += 1
+import subprocess  # noqa: E402
+
+collected = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider"],
+                           capture_output=True, text=True, cwd=ROOT).stdout
+n_tests = len([ln for ln in collected.splitlines() if ln.startswith("tests/")])
+if f"has {n_tests} tests" not in README or f"runs the {n_tests} tests" not in README:
+    failures.append(f"README test count differs from {n_tests}")
+
 # paths
 paths = set(re.findall(r"`([\w./-]+\.(?:py|md|csv|json|png|ipynb|txt|npz))`", README))
 paths |= set(re.findall(r"\]\(([\w./-]+\.(?:png|md|csv|json))\)", README))
