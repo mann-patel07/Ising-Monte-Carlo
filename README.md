@@ -8,7 +8,7 @@ I simulate the 2D Ising model with the Metropolis algorithm on lattices up to 64
 - Exact Tc: 2.2692.
 - Difference (estimate minus exact): -0.0026, which is -0.76 standard errors.
 
-The interval covers the exact value.
+The interval for this pair (L = 32 and 64) covers the exact value. The interval for the smallest pair (L = 8 and 16) does not, as the table below shows.
 
 ![Binder cumulant crossing](Images/binder_crossing.png)
 
